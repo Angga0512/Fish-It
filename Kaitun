@@ -1,2 +1,824 @@
+-- FIX UPDATE STATUS QUEST GHOSTFINN - FIXED NET CONSISTENCY
+local success, WindUI = pcall(function()
+    return loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
+end)
 
-edit 2
+if not success then
+    warn("Failed to load WindUI")
+    return
+end
+
+-- Cache services dan references
+local RS = game:GetService("ReplicatedStorage")
+local Workspace = game:GetService("Workspace")
+local VirtualInputManager = game:GetService("VirtualInputManager")
+local Players = game:GetService("Players")
+local Player = Players.LocalPlayer
+
+-- Cache net references SEKALI SAJA di bagian atas
+local net = RS.Packages._Index["sleitnick_net@0.2.0"].net
+local REEquipToolFromHotbar = net["RE/EquipToolFromHotbar"]
+
+-- Set auto sell threshold
+net["RF/UpdateAutoSellThreshold"]:InvokeServer(5)
+
+-- Position constants
+local targetPos = Vector3.new(-534.2695922851562, 17.314905166625977, 131.52491760253906)
+local targetLook = Vector3.new(-0.5275173187255859, -0, 0.8495442867279053)
+local sisPos = Vector3.new(-3738.15283203125, -135.0744171142578, -1008.4599609375)
+local sisLook = Vector3.new(0.20063601434230804, -4.290365751558056e-08, 0.9796658754348755)
+local tresurePos = Vector3.new(-3602.4111328125, -283.19586181640625, -1613.3017578125)
+local tresureLook = Vector3.new(0.5879867076873779, 4.41653513760798e-09, -0.8088705539703369)
+
+-- State variables
+local totalKoin = 0
+local sama = false
+local CARBON = false
+local DEMASCUS = false  
+local LUCKY = false
+local MIDNIGHT = false
+local ASTRAL = false
+local GHOSTFINN = false
+local LUCK = false
+local MIDNIGHT_BAIT = false
+local FLORAL = false
+local CORRUPT = false
+local AETHER = false
+local QUEST_1M_COINS = false
+local QUEST_SECRET_FISH = false
+local QUEST_3_MYTHIC_FISHES = false
+local QUEST_300_RARE_EPIC_FISH = false
+
+-- Global controls
+_G.AutoKaitun = false
+_G.Mancing = false
+instantDelay = 2.75
+
+-- UI Setup
+local Window = WindUI:CreateWindow({
+    Title = "FaRHan JEmbUt",
+    Author = "Angga Hebat",
+    Folder = "FOLDER BOKEP",
+    Size = UDim2.fromOffset(260, 290),
+    Transparent = true,
+    Theme = "Dark",
+    SideBarWidth = 170,
+    HasOutline = true,
+    OpenButton = {
+        Title = "alok alok", -- can be changed
+        CornerRadius = UDim.new(1,0), -- fully rounded
+        StrokeThickness = 3, -- removing outline
+        Enabled = true, -- enable or disable openbutton
+        Draggable = true,
+        OnlyMobile = false,
+        
+        Color = ColorSequence.new( -- gradient
+            Color3.fromHex("#30FF6A"), 
+            Color3.fromHex("#e7ff2f")
+        )
+    }
+})
+
+Window:Tag({Title = "61", Color = Color3.fromRGB(0, 255, 0), Radius = 17})
+Window:Tag({Title = "KHUSUS ONTET", Color = Color3.fromRGB(138, 43, 226), Radius = 17})
+WindUI:Notify({Title = "FARHAN UNSRI", Content = "ONTET", Duration = 3, Icon = "bell"})
+
+local Tab1 = Window:Tab({Title = "JEMBOT", Icon = "user"})
+
+-- FUNGSI CEK KOIN YANG SUDAH DIPERBAIKI
+function cekKoin()
+    if not _G.AutoKaitun then return end
+    local RS = game:GetService("ReplicatedStorage")
+    local Players = game:GetService("Players")
+    local StarterGui = game:GetService("StarterGui")
+    local plr = Players.LocalPlayer
+    local function getCoinsOnce()
+        local ok, ReplionModule = pcall(function()
+            return RS:FindFirstChild("Packages") and require(RS.Packages:WaitForChild("Replion")) or require(RS:WaitForChild("Replion"))
+        end)
+        if ok and ReplionModule and ReplionModule.Client then
+            local Data = ReplionModule.Client:GetReplion("Data")
+            if Data then
+                local state = (Data.GetState and Data:GetState()) or  (Data.Get and Data:Get()) or  Data.State or Data._data
+                if typeof(state) == "table" then
+                    for _, key in ipairs({"Coins","Coin","Money","Cash","Gold","Balance"}) do
+                        local v = state[key]
+                        if typeof(v) == "number" then
+                            return v
+                        end
+                    end
+                end
+            end
+        end
+    end
+    totalKoin = getCoinsOnce() or 0
+end
+
+function autoClick()
+    if not _G.AutoKaitun then return end
+    REEquipToolFromHotbar:FireServer(1)
+    local camera = Workspace.CurrentCamera
+    VirtualInputManager:SendMouseButtonEvent(10, camera.ViewportSize.Y - 10, 0, true, game, 0)
+    task.wait(0.01)
+    VirtualInputManager:SendMouseButtonEvent(10, camera.ViewportSize.Y - 10, 0, false, game, 0)
+end
+
+function respawn()
+    if not _G.AutoKaitun then return end
+    local char = Player.Character
+    if char then
+        char.HumanoidRootPart.CFrame = CFrame.new(-650.1349487304688, 36.00054931640625, 190.03414916992188)
+    end
+    task.wait(7)
+end
+
+-- FUNGSI CEK ROD YANG SUDAH DIPERBAIKI
+function cekRod()
+    if not _G.AutoKaitun then return end
+    
+    local success, result = pcall(function()
+        local RS = game:GetService("ReplicatedStorage")
+        local ReplionModule = require(RS.Packages.Replion)
+        local Data = ReplionModule.Client:GetReplion("Data")
+        
+        local state = (Data.GetState and Data:GetState()) or (Data.Get and Data:Get()) or Data.State or Data._data
+        if not state or typeof(state) ~= "table" then
+            return
+        end
+        
+        local inventory = state.Inventory or {}
+        local bag = inventory["Fishing Rods"] or {}
+        
+        -- Reset status
+        CARBON, DEMASCUS, LUCKY, MIDNIGHT, ASTRAL, GHOSTFINN = false, false, false, false, false, false
+        
+        local targetRods = {
+            [76] = "CARBON",
+            [77] = "DEMASCUS", 
+            [4] = "LUCKY",
+            [80] = "MIDNIGHT", 
+            [5] = "ASTRAL",
+            [169] = "GHOSTFINN"
+        }
+        
+        for i, rod in ipairs(bag) do
+            if type(rod) == "table" then
+                local id = rod.Id or rod.id
+                if id then
+                    for targetId, rodName in pairs(targetRods) do
+                        if tonumber(id) == targetId then
+                            if rodName == "CARBON" then CARBON = true
+                            elseif rodName == "DEMASCUS" then DEMASCUS = true
+                            elseif rodName == "LUCKY" then LUCKY = true
+                            elseif rodName == "MIDNIGHT" then MIDNIGHT = true
+                            elseif rodName == "ASTRAL" then ASTRAL = true
+                            elseif rodName == "GHOSTFINN" then GHOSTFINN = true
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end)
+end
+
+-- FUNGSI CEK BAIT YANG SUDAH DIPERBAIKI
+function cekBait()
+    if not _G.AutoKaitun then return end
+    
+    local success, result = pcall(function()
+        local RS = game:GetService("ReplicatedStorage")
+        local ReplionModule = require(RS.Packages.Replion)
+        local Data = ReplionModule.Client:GetReplion("Data")
+        
+        local state = (Data.GetState and Data:GetState()) or (Data.Get and Data:Get()) or Data.State or Data._data
+        if not state or typeof(state) ~= "table" then
+            return
+        end
+        
+        local inventory = state.Inventory or {}
+        local bag = inventory["Baits"] or {}
+        
+        -- Reset status
+        LUCK, MIDNIGHT_BAIT, CORRUPT, AETHER, FLORAL = false, false, false, false, false
+        
+        local targetBaits = {
+            [2] = "LUCK",
+            [3] = "MIDNIGHT_BAIT", 
+            [15] = "CORRUPT",
+            [16] = "AETHER",
+            [20] = "FLORAL"
+        }
+        
+        for i, bait in ipairs(bag) do
+            if type(bait) == "table" then
+                local id = bait.Id or bait.id
+                if id then
+                    for targetId, baitName in pairs(targetBaits) do
+                        if tonumber(id) == targetId then
+                            if baitName == "LUCK" then LUCK = true
+                            elseif baitName == "MIDNIGHT_BAIT" then MIDNIGHT_BAIT = true
+                            elseif baitName == "CORRUPT" then CORRUPT = true
+                            elseif baitName == "AETHER" then AETHER = true
+                            elseif baitName == "FLORAL" then FLORAL = true
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end)
+end
+
+-- FUNGSI EQUIP ROD YANG SUDAH DIPERBAIKI (MENGGUNAKAN NET GLOBAL)
+function equipBestRod()
+    
+    local success, result = pcall(function()
+        local RS = game:GetService("ReplicatedStorage")
+        local ReplionModule = require(RS.Packages.Replion)
+        local Data = ReplionModule.Client:GetReplion("Data")
+        
+        local state = (Data.GetState and Data:GetState()) or (Data.Get and Data:Get()) or Data.State or Data._data
+        if not state or typeof(state) ~= "table" then return end
+        
+        local inventory = state.Inventory or {}
+        local bag = inventory["Fishing Rods"] or {}
+        
+        local targetRods = {
+            [169] = "GHOSTFINN",
+            [5] = "ASTRAL",
+            [80] = "MIDNIGHT", 
+            [4] = "LUCKY",
+            [77] = "DEMASCUS",
+            [76] = "CARBON"
+        }
+        
+        -- Cari rod terbaik yang dimiliki
+        for _, targetId in ipairs({169, 5, 80, 4, 77, 76}) do
+            for _, rod in ipairs(bag) do
+                if type(rod) == "table" then
+                    local id = rod.Id or rod.id
+                    local uuid = rod.UUID or rod.uuid
+                    if tonumber(id) == targetId and uuid then
+                        print("Equipping rod:", targetRods[targetId])
+                        net["RE/EquipItem"]:FireServer(uuid, "Fishing Rods")
+                        return true
+                    end
+                end
+            end
+        end
+        
+        print("No suitable rod found to equip")
+        return false
+    end)
+    
+    if not success then
+        print("Error in equipBestRod:", result)
+    end
+end
+
+-- FUNGSI EQUIP BAIT YANG SUDAH DIPERBAIKI (MENGGUNAKAN NET GLOBAL)
+function equipBestBait()
+    if not _G.AutoKaitun then return end
+    
+    local success, result = pcall(function()
+        local RS = game:GetService("ReplicatedStorage")
+        local ReplionModule = require(RS.Packages.Replion)
+        local Data = ReplionModule.Client:GetReplion("Data")
+        
+        local state = (Data.GetState and Data:GetState()) or (Data.Get and Data:Get()) or Data.State or Data._data
+        if not state or typeof(state) ~= "table" then return end
+        
+        local inventory = state.Inventory or {}
+        local bag = inventory["Baits"] or {}
+        
+        local targetBaits = {
+            [20] = "FLORAL",
+            [16] = "AETHER",
+            [15] = "CORRUPT", 
+            [3] = "MIDNIGHT_BAIT",
+            [2] = "LUCK"
+        }
+        
+        -- Cari bait terbaik yang dimiliki
+        for _, targetId in ipairs({20, 16, 15, 3, 2}) do
+            for _, bait in ipairs(bag) do
+                if type(bait) == "table" then
+                    local id = bait.Id or bait.id
+                    if tonumber(id) == targetId then
+                        net["RE/EquipBait"]:FireServer(id)
+                        return true
+                    end
+                end
+            end
+        end
+        return false
+    end)
+end
+
+-- FUNGSI UNTUK MEMBELI ITEM DENGAN NET GLOBAL
+-- FUNGSI UNTUK MEMBELI ITEM DENGAN NET GLOBAL - VERSI DIPERBAIKI
+function purchaseItem(itemType, id, cost)
+    if not _G.AutoKaitun then return false end
+    
+    -- Cek jika sudah memiliki item tersebut
+    if (itemType == "RF/PurchaseFishingRod" and (
+        (id == 76 and CARBON) or
+        (id == 77 and DEMASCUS) or
+        (id == 4 and LUCKY) or
+        (id == 80 and MIDNIGHT) or
+        (id == 5 and ASTRAL) or
+        (id == 169 and GHOSTFINN)
+    )) or (itemType == "RF/PurchaseBait" and (
+        (id == 2 and LUCK) or
+        (id == 3 and MIDNIGHT_BAIT) or
+        (id == 15 and CORRUPT) or
+        (id == 16 and AETHER) or
+        (id == 20 and FLORAL)
+    )) then
+        return false
+    end
+    
+    if totalKoin >= cost then 
+        respawn()
+        local success = pcall(function()
+            net[itemType]:InvokeServer(id)
+        end)
+        
+        if success then
+            task.wait(2) -- Beri waktu untuk proses pembelian
+            return true
+        else
+            return false
+        end
+    else
+        return false
+    end
+    equipBestRod()
+    equipBestBait()
+end
+
+-- FUNGSI CEK ALL YANG SUDAH DIPERBAIKI (MENGGUNAKAN purchaseItem)
+function cekAll()
+    if not _G.AutoKaitun then return end
+    cekRod()
+    cekBait()
+    cekKoin()
+    updateQuestVariables()
+    cekPos(targetPos,targetLook)
+    
+    -- Gunakan fungsi purchaseItem yang konsisten
+    if totalKoin >= 1150000 and not CORRUPT then 
+        purchaseItem("RF/PurchaseBait", 15, 1150000)
+    end
+end
+
+-- Fungsi lainnya tetap sama...
+function tele(x, y)
+    if not _G.AutoKaitun then return end
+    local char = Player.Character
+    if char and char:FindFirstChild("HumanoidRootPart") then
+        char.HumanoidRootPart.CFrame = CFrame.lookAt(x, x + y)
+    end
+end
+
+function cekPos(x, y)
+    if not _G.AutoKaitun then return end
+    local char = Player.Character
+    if char and char:FindFirstChild("HumanoidRootPart") then
+        sama = (char.HumanoidRootPart.Position - x).Magnitude < 0.1
+    end
+end
+
+function getQuestStatus()
+    local questStatus = {
+        earn1MCoins = false,
+        catch1SecretFish = false,
+        catch3MythicFishes = false,
+        catch300RareEpicFish = false
+    }
+    
+    local success = pcall(function()
+        local content = Workspace:WaitForChild("!!! MENU RINGS"):WaitForChild("Deep Sea Tracker"):WaitForChild("Board"):WaitForChild("Gui"):WaitForChild("Content")
+        local label1 = content:WaitForChild("Label1")
+        local label2 = content:WaitForChild("Label2") 
+        local label3 = content:WaitForChild("Label3")
+        local label4 = content:WaitForChild("Label4")
+        
+        local function isCompleted(text)
+            local percentage = string.match(text, "(%d+)%%")
+            return percentage and tonumber(percentage) >= 100
+        end
+        
+        if string.find(label1.Text, "300 Rare/Epic fish") then
+            questStatus.catch300RareEpicFish = isCompleted(label1.Text)
+        end
+        if string.find(label2.Text, "3 Mythic fish") then
+            questStatus.catch3MythicFishes = isCompleted(label2.Text)
+        end
+        if string.find(label3.Text, "1 SECRET fish") then
+            questStatus.catch1SecretFish = isCompleted(label3.Text)
+        end
+        if string.find(label4.Text, "Earn IM Coins") or string.find(label4.Text, "1M Coins") then
+            questStatus.earn1MCoins = isCompleted(label4.Text)
+        end
+    end)
+    
+    return questStatus
+end
+
+function updateQuestVariables()
+    local status = getQuestStatus()
+    QUEST_1M_COINS = status.earn1MCoins or false
+    QUEST_SECRET_FISH = status.catch1SecretFish or false
+    QUEST_3_MYTHIC_FISHES = status.catch3MythicFishes or false
+    QUEST_300_RARE_EPIC_FISH = status.catch300RareEpicFish or false
+end
+
+local function safeCall(name, func)
+    local success, errorMsg = pcall(func)
+    if not success then
+        print("❌ Error in " .. name .. ":", errorMsg)
+        return false
+    end
+    return true
+end
+
+local RS=game:GetService("ReplicatedStorage")
+local net=RS.Packages._Index["sleitnick_net@0.2.0"].net
+
+local function catch()
+    safeCall("catch",function()net["RE/FishingCompleted"]:FireServer()
+    end)
+end
+local function charge()
+    safeCall("charge",function()net["RF/ChargeFishingRod"]:InvokeServer()
+    end)
+end
+local function lempar()
+    safeCall("lempar",function()net["RF/RequestFishingMinigameStarted"]:InvokeServer(-1.233,0.996,1761532005.497)
+    end)
+end
+
+local function instant_cycle()
+    REEquipToolFromHotbar:FireServer(1)
+    catch()
+    task.wait(1.6)
+    equipBestRod()
+    charge()
+    lempar()
+    task.wait(instantDelay)
+end
+
+function fishing(x, y)
+    if not _G.Mancing then
+        _G.Mancing = true
+    end
+    local startKoin = totalKoin
+    local lastQuestCheck = os.time()
+    
+    while _G.Mancing and not sama and _G.AutoKaitun do
+        tele(x, y)
+        task.wait(1)
+        cekPos(x, y)
+        cekKoin()
+        
+        -- AUTO STOP JIKA QUEST SUDAH SELESAI
+        if os.time() - lastQuestCheck >= 10 then
+            updateQuestVariables()
+            lastQuestCheck = os.time()
+            
+            -- Cek jika quest sudah selesai dan kita di spot yang salah
+            if ASTRAL then
+                if (x == sisPos and QUEST_SECRET_FISH and QUEST_3_MYTHIC_FISHES) or
+                   (x == tresurePos and QUEST_300_RARE_EPIC_FISH) then
+                    _G.Mancing = false
+                    return
+                end
+            end
+        end
+        
+        if totalKoin >= startKoin + 50 then
+            _G.Mancing = false
+            return
+        end
+    end
+    
+    if _G.Mancing and sama and _G.AutoKaitun then
+        local lastKoinCheck = os.time()
+        
+        while _G.Mancing and sama and _G.AutoKaitun do
+            instant_cycle()
+            cekPos(x,y)
+            -- Cek koin setiap 10 detik
+            if os.time() - lastKoinCheck >= 10 then
+                cekKoin()
+                lastKoinCheck = os.time()
+
+
+                if not LUCKY and not MIDNIGHT and not ASTRAL and not GHOSTFINN then
+                    instantDelay = 3.2
+                elseif LUCKY and not MIDNIGHT and not ASTRAL and not GHOSTFINN then
+                    instantDelay = 2.4
+                elseif MIDNIGHT and not ASTRAL and not GHOSTFINN then
+                    instantDelay = 1.75
+                elseif ASTRAL and not GHOSTFINN then
+                    instantDelay = 1.75
+                elseif GHOSTFINN then
+                    instantDelay = 0.75
+                end
+
+                if ASTRAL and CORRUPT and lastKoinCheck >= 100000 then
+                    task.wait(0.01)
+                    game:GetService("ReplicatedStorage").Packages._Index["sleitnick_net@0.2.0"].net["RF/PurchaseWeatherEvent"]:InvokeServer("Cloudy")
+                    task.wait(0.01)
+                    game:GetService("ReplicatedStorage").Packages._Index["sleitnick_net@0.2.0"].net["RF/PurchaseWeatherEvent"]:InvokeServer("Storm")
+                    task.wait(0.01)
+                    game:GetService("ReplicatedStorage").Packages._Index["sleitnick_net@0.2.0"].net["RF/PurchaseWeatherEvent"]:InvokeServer("Wind")
+                    task.wait(0.01)
+                end
+                -- Cek apakah sudah mencapai target koin untuk upgrade
+                if (not CARBON and not DEMASCUS and not LUCKY and not MIDNIGHT and not ASTRAL and not GHOSTFINN and totalKoin >= 900) or
+                   (not LUCK and not CORRUPT and totalKoin >= 1000) or
+                   (not DEMASCUS and not LUCKY and not MIDNIGHT and not ASTRAL and not GHOSTFINN and totalKoin >= 3000) or
+                   (not MIDNIGHT_BAIT and not CORRUPT and totalKoin >= 3000) or
+                   (not LUCKY and not MIDNIGHT and not ASTRAL and not GHOSTFINN and totalKoin >= 15000) or
+                   (not MIDNIGHT and not ASTRAL and not GHOSTFINN and totalKoin >= 50000) or
+                   (not ASTRAL and not GHOSTFINN and totalKoin >= 1000000) then
+                    _G.Mancing = false
+                    break
+                end
+            end
+        end
+        
+        if _G.Mancing and not sama and _G.AutoKaitun then
+            fishing(x, y)
+        end
+    end
+end
+
+local function waitForReelStart(timeout)
+    timeout = timeout or 10
+    local startTime = os.time()
+    local character = player.Character
+    local humanoid = character:FindFirstChild("Humanoid")
+    local animator = humanoid:FindFirstChild("Animator")
+    local connection
+    local found = false
+    local function onAnimationPlayed(animationTrack)
+        local anim = animationTrack.Animation
+        local currentId = anim.AnimationId
+        -- cek berdasarkan nama
+        if anim.Name:lower():find("reelstart") then
+            print("✅ ReelStart found by name!")
+            found = true
+        end
+    end
+    connection = animator.AnimationPlayed:Connect(onAnimationPlayed)
+    local elapsed = 0
+    
+    while elapsed < timeout and not found do
+        elapsed = elapsed + 0.1
+        task.wait(0.1)
+    end
+    if connection then
+        connection:Disconnect()
+    end
+    print("🎯 Wait result: {found} (waited {elapsed} seconds)")
+    return found
+end
+
+
+-- Cache untuk auto sell
+local sellRemotes = nil
+function getSellRemotes()
+    if sellRemotes then return sellRemotes end
+    
+    sellRemotes = {}
+    for _, v in ipairs(RS:GetDescendants()) do
+        if v:IsA("RemoteEvent") and v.Name:lower():find("sell") then
+            table.insert(sellRemotes, v)
+        elseif v:IsA("RemoteFunction") and v.Name:lower():find("sell") then
+            table.insert(sellRemotes, v)
+        end
+    end
+    return sellRemotes
+end
+
+function autoSell()
+    local remotes = getSellRemotes()
+    while _G.AutoKaitun do
+        for _, v in ipairs(remotes) do
+            task.wait(1)
+            if v:IsA("RemoteEvent") then
+                pcall(function() v:FireServer() end)
+            elseif v:IsA("RemoteFunction") then
+                pcall(function() v:InvokeServer() end)
+            end
+        end
+        task.wait(0.5)
+    end
+end
+
+-- Main execution function YANG SUDAH DIPERBAIKI
+local function startAutoKaitun()
+    _G.Mancing = true
+    task.spawn(autoSell)
+    
+    -- VARIABEL UNTUK TRACKING QUEST PROGRESS
+    local lastQuestCheck = 0
+    local currentFishingSpot = nil
+    
+    while _G.AutoKaitun do
+        cekAll() -- Update status equipment dan koin
+        task.wait(1)
+        equipBestRod()
+        equipBestBait()
+        -- EQUIPMENT PROGRESSION LOGIC YANG DIPERBAIKI
+        if not CARBON and not DEMASCUS and not LUCKY and not MIDNIGHT and not ASTRAL then
+            if purchaseItem("RF/PurchaseFishingRod", 76, 900) then
+                task.wait(2) -- Beri waktu untuk update
+                cekRod() -- Refresh rod status
+            else
+                fishing(targetPos, targetLook)
+            end
+            
+        elseif not DEMASCUS and not LUCKY and not MIDNIGHT and not ASTRAL then
+            if purchaseItem("RF/PurchaseFishingRod", 77, 3000) then
+                task.wait(2)
+                cekRod()
+            else
+                fishing(targetPos, targetLook)
+            end
+            
+        elseif not MIDNIGHT_BAIT and not CORRUPT then
+            if purchaseItem("RF/PurchaseBait", 3, 3000) then
+                task.wait(2)
+                cekBait()
+            else
+                fishing(targetPos, targetLook)
+            end
+            
+        elseif not LUCKY and not MIDNIGHT and not ASTRAL then
+            if purchaseItem("RF/PurchaseFishingRod", 4, 15000) then
+                task.wait(2)
+                cekRod()
+            else
+                fishing(targetPos, targetLook)
+            end
+            
+        elseif not MIDNIGHT and not ASTRAL then
+            if purchaseItem("RF/PurchaseFishingRod", 80, 50000) then
+                task.wait(2)
+                cekRod()
+            else
+                fishing(targetPos, targetLook)
+            end
+            
+        elseif not ASTRAL then
+            if purchaseItem("RF/PurchaseFishingRod", 5, 1000000) then
+                task.wait(2)
+                cekRod()
+            else
+                fishing(targetPos, targetLook)
+            end
+        
+        -- QUEST LOGIC YANG DINAMIS (HANYA JIKA SUDAH ASTRAL)
+        elseif ASTRAL and not GHOSTFINN and _G.AutoKaitun then
+            -- Update quest status setiap 30 detik
+            if os.time() - lastQuestCheck >= 30 then
+                updateQuestVariables()
+                lastQuestCheck = os.time()
+            end
+            
+            -- DYNAMIC QUEST PROGRESSION
+            if not QUEST_SECRET_FISH or not QUEST_3_MYTHIC_FISHES then
+                -- Jika belum selesai secret/mythic, fishing di sisPos
+                if currentFishingSpot ~= "sis" then
+                    currentFishingSpot = "sis"
+                end
+                fishing(sisPos, sisLook)
+                
+            elseif not QUEST_300_RARE_EPIC_FISH and QUEST_SECRET_FISH and QUEST_3_MYTHIC_FISHES then
+                -- Jika sudah selesai secret/mythic tapi belum rare/epic, pindah ke treasure
+                if currentFishingSpot ~= "treasure" then
+                    currentFishingSpot = "treasure"
+                end
+                fishing(tresurePos, tresureLook)
+                
+            else
+                -- SEMUA QUEST SELESAI, kembali ke spot normal
+                if currentFishingSpot ~= "normal" then
+                    currentFishingSpot = "normal"
+                end
+                fishing(targetPos, targetLook)
+            end
+        
+        -- JIKA SUDAH GHOSTFINN
+        elseif GHOSTFINN and _G.AutoKaitun then
+            fishing(targetPos, targetLook)
+            
+        else
+            -- FALLBACK: Jika semua kondisi di atas tidak terpenuhi
+            fishing(targetPos, targetLook)
+        end
+    end
+end
+
+-- Tab1:Input({
+--     Title = "Instant Delay",
+--     Desc = "Speed Delay Instant",
+--     Value = "1.00",
+--     InputIcon = false,
+--     Type = "Input",
+--     Placeholder = "1.00",
+--     Callback = function(input)
+--         instantDelay = tonumber(input)
+--     end
+-- })
+
+-- Toggle untuk Auto Kaitun
+local AutoKaitunToggle = Tab1:Toggle({
+    Title = "Auto Kaitun",
+    Desc = false,
+    Icon = false,
+    Type = "Toggle",
+    Value = false,
+    Callback = function(Value) 
+        _G.AutoKaitun = Value
+        if Value then
+            WindUI:Notify({Title = "Auto Kaitun", Content = "Dinyalakan!", Duration = 2, Icon = "check"})
+            task.spawn(startAutoKaitun)
+        else
+            WindUI:Notify({Title = "Auto Kaitun", Content = "Dimatikan!", Duration = 2, Icon = "x"})
+            _G.Mancing = false
+        end
+    end
+})
+
+-- ===============================
+-- HOTKEY SYSTEM
+-- ===============================
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+
+-- Hotkey configuration
+local HOTKEYS = {
+    TOGGLE_KAITUN = Enum.KeyCode.Q,  -- F untuk toggle Auto Kaitun
+    OPEN_MENU = Enum.KeyCode.LeftControl -- RightCtrl untuk buka/tutup menu
+}
+
+-- State untuk tracking UI
+local isUIOpen = true
+
+-- Function untuk toggle AutoKaitun via hotkey
+local function toggleAutoKaitunHotkey()
+    local newValue = not _G.AutoKaitun
+    _G.AutoKaitun = newValue
+    
+    -- Update UI toggle state (jika diperlukan)
+    if AutoKaitunToggle then
+        -- Ini akan memicu callback secara otomatis
+        AutoKaitunToggle:Set(newValue)
+    else
+        -- Manual trigger jika tidak ada reference
+        if newValue then
+            WindUI:Notify({Title = "Auto Kaitun", Content = "Dinyalakan via Hotkey!", Duration = 2, Icon = "check"})
+            task.spawn(startAutoKaitun)
+        else
+            WindUI:Notify({Title = "Auto Kaitun", Content = "Dimatikan via Hotkey!", Duration = 2, Icon = "x"})
+            _G.Mancing = false
+        end
+    end
+end
+
+-- Function untuk toggle menu
+local function toggleMenu()
+    if Window and Window.Toggle then
+        Window:Toggle()
+        isUIOpen = not isUIOpen
+    end
+end
+
+-- Hotkey listener
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end -- Skip jika di game
+    
+    if input.KeyCode == HOTKEYS.TOGGLE_KAITUN then
+        toggleAutoKaitunHotkey()
+        
+    elseif input.KeyCode == HOTKEYS.OPEN_MENU then
+        toggleMenu()
+    end
+end)
+
+-- Notify user tentang hotkeys
+task.spawn(function()
+    wait(3)
+    WindUI:Notify({
+        Title = "Hotkeys Activated", 
+        Content = "Q: Auto Kaitun | LeftCtrl: Menu",
+        Duration = 5, 
+        Icon = "key"
+    })
+end)
